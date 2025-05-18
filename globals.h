@@ -7,7 +7,9 @@
 #include <string>
 #include <cstddef>
 #include <cmath>
-
+constexpr int SCREEN_WIDTH  = 800;
+constexpr int SCREEN_HEIGHT = 600;
+constexpr int TILE_SIZE     = 32;
 /* Game Elements */
 
 inline const char WALL      = '#',

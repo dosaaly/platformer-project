@@ -7,6 +7,7 @@
 #include <string>
 #include <cassert>
 
+
 void load_fonts() {
     menu_font = LoadFontEx("data/fonts/ARCADE_N.ttf", 256, nullptr, 128);
 }
