@@ -2,7 +2,6 @@
 #define GLOBALS_H
 
 #include "raylib.h"
-
 #include <vector>
 #include <string>
 #include <cstddef>

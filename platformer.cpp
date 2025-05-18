@@ -1,5 +1,5 @@
 #include "raylib.h"
-
+#include "level_adapter.h"
 #include "globals.h"
 #include "level.h"
 #include "player.h"
@@ -7,6 +7,9 @@
 #include "graphics.h"
 #include "assets.h"
 #include "utilities.h"
+#include "level_legacy.h"
+
+Level gLevel;
 
 void update_game() {
     game_frame++;
@@ -146,7 +149,6 @@ int main() {
 
     CloseAudioDevice();
     CloseWindow();
-
 
     return 0;
 }

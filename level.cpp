@@ -1,94 +1,86 @@
 #include "level.h"
 #include "globals.h"
-#include "assets.h"
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <cctype>
+#include <raylib.h>
+#include "level_legacy.h"
+bool Level::texturesLoaded = false;
 
-Level::Level() {}
+static constexpr char CH_WALL      = WALL;
+static constexpr char CH_WALL_DARK = WALL_DARK;
+static constexpr char CH_AIR       = AIR;
+static constexpr char CH_SPIKE     = SPIKE;
+static constexpr char CH_PLAYER    = PLAYER;
+static constexpr char CH_ENEMY     = ENEMY;
+static constexpr char CH_COIN      = COIN;
+static constexpr char CH_EXIT      = EXIT;
 
-bool Level::loadFromFile(const std::string& path) {
-    std::ifstream file(path);
-    if (!file.is_open()) throw std::runtime_error("Cannot open " + path);
+static bool charSolid(char ch){ return ch==CH_WALL || ch==CH_WALL_DARK; }
 
-    std::string content;
-    std::getline(file, content);
-    std::stringstream ss(content);
-    std::string rowStr;
-    map.clear();
-    enemySpawns.clear();
+static Texture2D& texFor(char ch){
+    switch(ch){
+        case CH_WALL:      return wall_image;
+        case CH_WALL_DARK: return wall_dark_image;
+        case CH_SPIKE:     return spike_image;
+        case CH_EXIT:      return exit_image;
+        case CH_COIN:      return coin_sprite.frames[0];
+        default:           return wall_image;
+    }
+}
 
-    int row = 0;
-    while (std::getline(ss, rowStr, '|')) {
-        parseRLELine(rowStr, row++);
+void Level::loadTextures(){
+    if(texturesLoaded) return;
+    texturesLoaded = true;   // textures already loaded globally in assets.h
+}
+
+bool Level::load(std::size_t, const level& src){
+    loadTextures();
+    grid.clear();
+    _enemySpawns.clear();
+
+    grid.resize(src.rows);
+    for(size_t r=0;r<src.rows;++r){
+        grid[r].resize(src.columns);
+        for(size_t c=0;c<src.columns;++c){
+            char ch = src.data[r*src.columns + c];
+            grid[r][c] = ch;
+            if(ch==CH_PLAYER){ _playerSpawn={float(c),float(r)}; grid[r][c]=CH_AIR; }
+            else if(ch==CH_ENEMY){ _enemySpawns.push_back({float(c),float(r)}); grid[r][c]=CH_AIR; }
+        }
     }
     return true;
 }
 
-void Level::parseRLELine(const std::string& line, int row) {
-    int col = 0;
-    for (size_t i = 0; i < line.size();) {
-        int count = 0;
-        while (i < line.size() && std::isdigit(line[i])) {
-            count = count * 10 + (line[i++] - '0');
+bool Level::inside(int r,int c) const{
+    return r>=0 && c>=0 && r<(int)grid.size() && c<(int)grid[0].size();
+}
+bool Level::isSolid(int r,int c) const{ return inside(r,c)&&charSolid(grid[r][c]); }
+
+bool Level::colliding(Vector2 pos,char look) const{
+    Rectangle hit{pos.x,pos.y,1,1};
+    for(int r=int(pos.y)-1;r<=int(pos.y)+1;++r)
+        for(int c=int(pos.x)-1;c<=int(pos.x)+1;++c)
+            if(inside(r,c)&&grid[r][c]==look){
+                Rectangle cell{float(c),float(r),1,1};
+                if(CheckCollisionRecs(hit,cell)) return true;
+            }
+    return false;
+}
+
+char& Level::colliderRef(Vector2 pos,char look){
+    Rectangle hit{pos.x,pos.y,1,1};
+    for(int r=int(pos.y)-1;r<=int(pos.y)+1;++r)
+        for(int c=int(pos.x)-1;c<=int(pos.x)+1;++c)
+            if(inside(r,c)&&grid[r][c]==look){
+                Rectangle cell{float(c),float(r),1,1};
+                if(CheckCollisionRecs(hit,cell)) return grid[r][c];
+            }
+    return grid[int(pos.y)][int(pos.x)];
+}
+
+void Level::drawTiles() const{
+    for(int r=0;r<(int)grid.size();++r)
+        for(int c=0;c<(int)grid[r].size();++c){
+            char ch=grid[r][c];
+            if(ch==CH_AIR) continue;
+            DrawTexture(texFor(ch), c*TILE_SIZE, r*TILE_SIZE, WHITE);
         }
-        if (i >= line.size()) throw std::runtime_error("Bad RLE at row " + std::to_string(row));
-        char ch = line[i++];
-        TileType t = charToTile(ch);
-        if (t == TileType::Unknown) throw std::runtime_error(std::string("Unknown char ") + ch);
-        count = count ? count : 1;
-
-        for (int k = 0; k < count; ++k, ++col) {
-            if (t == TileType::PlayerStart)
-                playerStart = Vector2{ static_cast<float>(col), static_cast<float>(row) };
-            if (t == TileType::Enemy)
-                enemySpawns.push_back(Vector2{ static_cast<float>(col), static_cast<float>(row) });
-            if (map.size() <= row) map.emplace_back();
-            map[row].push_back(t);
-        }
-    }
-}
-
-void Level::update() {
-    // e.g. animate coins or spikes—empty for now
-}
-
-void Level::draw() {
-    const int tileSize = TILE_SIZE;
-    for (int y = 0; y < map.size(); ++y) {
-        for (int x = 0; x < map[y].size(); ++x) {
-            TileType t = map[y][x];
-            Texture2D tex = Assets::GetTexture(t);
-            DrawTexture(tex, x * tileSize, y * tileSize, WHITE);
-        }
-    }
-}
-
-
-Vector2 Level::getPlayerStart() const {
-    return Vector2{ playerStart.x * TILE_SIZE, playerStart.y * TILE_SIZE };
-}
-
-const std::vector<Vector2>& Level::getEnemySpawns() const {
-    return enemySpawns;
-}
-
-bool Level::isSolidTile(int tx, int ty) const {
-    if (ty < 0 || ty >= map.size() || tx < 0 || tx >= map[ty].size()) return false;
-    auto t = map[ty][tx];
-    return t == TileType::Wall || t == TileType::DarkWall;
-}
-
-TileType Level::charToTile(char ch) const {
-    switch (ch) {
-        case '#': return TileType::Wall;
-        case '=': return TileType::DarkWall;
-        case '-': return TileType::Air;
-        case '@': return TileType::PlayerStart;
-        case '*': return TileType::Coin;
-        case '^': return TileType::Spike;
-        case '&': return TileType::Enemy;
-        default:  return TileType::Unknown;
-    }
 }

@@ -1,3 +1,4 @@
+
 #ifndef IMAGES_H
 #define IMAGES_H
 
@@ -7,16 +8,15 @@
 #include <string>
 #include <cassert>
 
-
-void load_fonts() {
+inline void load_fonts() {
     menu_font = LoadFontEx("data/fonts/ARCADE_N.ttf", 256, nullptr, 128);
 }
 
-void unload_fonts() {
+inline void unload_fonts() {
     UnloadFont(menu_font);
 }
 
-void load_images() {
+inline void load_images() {
     wall_image                   = LoadTexture("data/images/wall.png");
     wall_dark_image              = LoadTexture("data/images/wall_dark.png");
     spike_image                  = LoadTexture("data/images/spikes.png");
@@ -40,7 +40,7 @@ void load_images() {
     foreground                   = LoadTexture("data/images/background/foreground.png");
 }
 
-void unload_images() {
+inline void unload_images() {
     UnloadTexture(wall_image);
     UnloadTexture(wall_dark_image);
     UnloadTexture(spike_image);
@@ -64,17 +64,17 @@ void unload_images() {
     UnloadTexture(foreground);
 }
 
-void draw_image(Texture2D image, Vector2 pos, float size) {
+inline void draw_image(Texture2D image, Vector2 pos, float size) {
     draw_image(image, pos, size, size);
 }
 
-void draw_image(Texture2D image, Vector2 pos, float width, float height) {
+inline void draw_image(Texture2D image, Vector2 pos, float width, float height) {
     Rectangle source = { 0.0f, 0.0f, static_cast<float>(image.width), static_cast<float>(image.height) };
     Rectangle destination = { pos.x, pos.y, width, height };
     DrawTexturePro(image, source, destination, { 0.0f, 0.0f }, 0.0f, WHITE);
 }
 
-sprite load_sprite(
+inline sprite load_sprite(
     const std::string &file_name_prefix,
     const std::string &file_name_suffix,
     size_t frame_count,
@@ -104,7 +104,7 @@ sprite load_sprite(
     return result;
 }
 
-void unload_sprite(sprite &sprite) {
+inline void unload_sprite(sprite &sprite) {
     assert(sprite.frames != nullptr);
 
     for (size_t i = 0; i < sprite.frame_count; ++i) {
@@ -114,11 +114,11 @@ void unload_sprite(sprite &sprite) {
     sprite.frames = nullptr;
 }
 
-void draw_sprite(sprite &sprite, Vector2 pos, float size) {
+inline void draw_sprite(sprite &sprite, Vector2 pos, float size) {
     draw_sprite(sprite, pos, size, size);
 }
 
-void draw_sprite(sprite &sprite, Vector2 pos, float width, float height) {
+inline void draw_sprite(sprite &sprite, Vector2 pos, float width, float height) {
     draw_image(sprite.frames[sprite.frame_index], pos, width, height);
 
     if (sprite.prev_game_frame == game_frame) {
@@ -137,7 +137,7 @@ void draw_sprite(sprite &sprite, Vector2 pos, float width, float height) {
     sprite.prev_game_frame = game_frame;
 }
 
-void load_sounds() {
+inline void load_sounds() {
     InitAudioDevice();
     coin_sound         = LoadSound("data/sounds/coin.wav");
     exit_sound         = LoadSound("data/sounds/exit.wav");
@@ -146,7 +146,7 @@ void load_sounds() {
     game_over_sound    = LoadSound("data/sounds/game_over.wav");
 }
 
-void unload_sounds() {
+inline void unload_sounds() {
     UnloadSound(coin_sound);
     UnloadSound(exit_sound);
     UnloadSound(kill_enemy_sound);
