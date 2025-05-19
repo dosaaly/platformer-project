@@ -30,7 +30,7 @@ void load_level(int offset /* =0 */)
     current_level = { rows, cols, current_level_data };
 
     spawn_player();
-    spawn_enemies();
+    EnemiesController::get_instance().spawn_enemies();
     derive_graphics_metrics_from_loaded_level();
 
     gLevel.load(level_index, current_level);   // hand to OOP Level

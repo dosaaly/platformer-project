@@ -8,7 +8,7 @@
 class Level {
 public:
     bool load(std::size_t index, const level& src);
-
+    bool colliding(Vector2 pos, char look);
     bool  inside(int row, int col)              const;
     bool  isSolid(int row, int col)             const;
     bool  colliding(Vector2 pos, char lookFor)  const;

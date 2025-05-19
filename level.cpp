@@ -54,14 +54,22 @@ bool Level::inside(int r,int c) const{
 }
 bool Level::isSolid(int r,int c) const{ return inside(r,c)&&charSolid(grid[r][c]); }
 
-bool Level::colliding(Vector2 pos,char look) const{
-    Rectangle hit{pos.x,pos.y,1,1};
-    for(int r=int(pos.y)-1;r<=int(pos.y)+1;++r)
-        for(int c=int(pos.x)-1;c<=int(pos.x)+1;++c)
-            if(inside(r,c)&&grid[r][c]==look){
-                Rectangle cell{float(c),float(r),1,1};
-                if(CheckCollisionRecs(hit,cell)) return true;
+bool Level::colliding(Vector2 pos, char look) {
+    Rectangle hit{pos.x, pos.y, 1, 1};
+    for (int r = int(pos.y); r <= int(pos.y) + 1; ++r) {
+        for (int c = int(pos.x); c <= int(pos.x) + 1; ++c) {
+            if (inside(r, c) && grid[r][c] == look) {
+                Rectangle cell{float(c), float(r), 1, 1};
+                if (CheckCollisionRecs(hit, cell)) {
+                    if (look == CH_COIN) {
+                        grid[r][c] = CH_AIR; // Replace coin with air
+                        PlaySound(coin_sound); // Play coin sound
+                    }
+                    return true;
+                }
             }
+        }
+    }
     return false;
 }
 
@@ -76,11 +84,12 @@ char& Level::colliderRef(Vector2 pos,char look){
     return grid[int(pos.y)][int(pos.x)];
 }
 
-void Level::drawTiles() const{
-    for(int r=0;r<(int)grid.size();++r)
-        for(int c=0;c<(int)grid[r].size();++c){
-            char ch=grid[r][c];
-            if(ch==CH_AIR) continue;
-            DrawTexture(texFor(ch), c*TILE_SIZE, r*TILE_SIZE, WHITE);
+void Level::drawTiles() const {
+    for (int r = 0; r < (int)grid.size(); ++r) {
+        for (int c = 0; c < (int)grid[r].size(); ++c) {
+            char ch = grid[r][c];
+            if (ch == CH_AIR) continue; // Skip empty tiles
+            DrawTexture(texFor(ch), c * TILE_SIZE, r * TILE_SIZE, WHITE);
         }
+    }
 }

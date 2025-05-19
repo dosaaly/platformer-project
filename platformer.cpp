@@ -39,7 +39,7 @@ void update_game() {
             }
 
             update_player();
-            update_enemies();
+            EnemiesController::get_instance().update_enemies();
 
             if (IsKeyPressed(KEY_ESCAPE)) {
                 game_state = PAUSED_STATE;
