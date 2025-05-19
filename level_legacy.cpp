@@ -1,8 +1,7 @@
 #include "globals.h"
 #include "level_adapter.h"
+#include "player_manager.h"
 
-// -------- wrappers already provided by level_adapter.h --------
-// is_inside_level, is_colliding, get_collider
 
 void reset_level_index() { level_index = 0; }
 
@@ -29,7 +28,7 @@ void load_level(int offset /* =0 */)
 
     current_level = { rows, cols, current_level_data };
 
-    spawn_player();
+    PlayerManager::get_instance().spawn_player();
     EnemiesController::get_instance().spawn_enemies();
     derive_graphics_metrics_from_loaded_level();
 
